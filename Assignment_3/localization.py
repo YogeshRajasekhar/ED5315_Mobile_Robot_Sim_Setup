@@ -26,7 +26,7 @@ class Odometry_calculation:
     right_tick=0
     L=width_robo
     
-    pose = np.array([4.0, 4.0, 0.0]) #Variable to store pose of the robot 
+    pose = np.array([0, -1.0, 0.0]) #Variable to store pose of the robot 
     covariance = np.diag([0.0, 0.0, 0.0]) #Covariance of the robot
 
     def __init__(self,matrix_calculator):
