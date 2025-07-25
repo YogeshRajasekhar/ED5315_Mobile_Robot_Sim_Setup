@@ -1,4 +1,4 @@
-# ED5315 Assignment-3
+# ED5315 Assignment-4
 EKF-based localisation for a mobile robot (Visualized in Coppleiasim(V-REP))
 
 ## Setup:
@@ -20,7 +20,9 @@ To check the compatibility of your system, follow the instructions [here](https:
 
   4. Launch Spyder. Click on File -> Open and navigate to the downloaded setup. Select the file main.py, run it by clicking on the green play button.(Always ensure you are in the same repository!) 
 
-  5.	If you had defined the update step correctly, you will see a robot moving along with a phantom robot. The real robot is the ground truth and the phantom robot 's position is based on your EKF implementation.
+  5. Always ensure that the simulation is running before you launch the code, otherwise you will get an error that says **"Failed connecting to the remote API server. Program ended"**. (In some systems, you might have to slow down the simulation for it to match the output. Please use the tortoise button in that case, and then run main.py)
+
+  6.	If you had defined the update step correctly, you will see a robot moving along with a phantom robot. The real robot is the ground truth and the phantom robot 's position is based on your EKF implementation.
 
 ## Solution video:
 Your output would look like this.
