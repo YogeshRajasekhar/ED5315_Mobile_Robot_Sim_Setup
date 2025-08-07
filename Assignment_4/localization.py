@@ -8,10 +8,10 @@ import matplotlib.pyplot as plt
 #Global Variables
 
 '''Robot properties'''
-width_robo=1
-ticks_to_millimeter=0.05
+width_robo=0.5
+ticks_to_millimeter=1
 control_motion_factor=1
-control_turn_factor=1
+control_turn_factor=10
 odometry_offset=0
 
 #class to keep track of the ticks which arise from the motor encoders
@@ -26,12 +26,20 @@ class Odometry_calculation:
     right_tick=0
     L=width_robo
     
-    pose = np.array([0, -1.0, 0.0]) #Variable to store pose of the robot 
-    covariance = np.diag([0.0, 0.0, 0.0]) #Covariance of the robot
-
-    def __init__(self,matrix_calculator):
-        self.matrix_calculator=matrix_calculator
+    pose = np.array([0.0, 0.0, 0.0]) #Variable to store pose of the robot 
+    covariance = np.diag([1000.0, 1000.0, 1000.0]) #Covariance of the robot
     
+    R=np.array([[0.5,0],
+                [0,0.1]])
+    
+    
+    I=np.identity(3)
+
+    def __init__(self,matrix_calculator,update_eq):
+        self.matrix_calculator=matrix_calculator
+        self.update_eq=update_eq
+    
+    #Prediction
     def get_system_covariance(self, left_dist_moved, right_dist_moved):
 
         """Calculates the increase in covariance due to previous state"""
@@ -70,6 +78,7 @@ class Odometry_calculation:
             abs_left_dist_moved = abs(left_dist_moved)
             abs_right_dist_moved = abs(right_dist_moved)
 
+            #Simplyfy this later on.
             #defining the covariances associated with x the left and right componenet of the control
             sigma_l = (alpha_1 * abs_left_dist_moved) + (alpha_2 * abs((abs_left_dist_moved - abs_right_dist_moved))) # covariance propotional to left and to difference in left and right control
             sigma_r = (alpha_1 * abs_right_dist_moved) + (alpha_2 * abs((abs_left_dist_moved- abs_right_dist_moved)))  # covariance propotional to right and to difference in left and right control
@@ -84,10 +93,13 @@ class Odometry_calculation:
     
             #calcualting the final covariance 
             self.covariance = np.dot(F_p, np.dot(self.covariance, F_p.T)) + np.dot(F_u, np.dot(control_covariance, F_u.T))
+            # Q = np.array([[0.01, 0,0], [0, 0.01],[0.01, 0]])  # Process noise covariance
+            # self.covariance += Q  # Adding process noise to the covariance
 
         return self.covariance
 
     #function to update the current pose bsed on previous pose and control input 
+    
     def odometry_update(self):
 
         """Calcualtes the new state based on old state and change in encoder ticks"""
@@ -113,6 +125,8 @@ class Odometry_calculation:
             theta = self.pose[2] #Get previous orientation  
             x = self.pose[0]+tick_difference[0]*ticks_to_millimeter*cos(theta) #updating x 
             y = self.pose[1]+tick_difference[1]*ticks_to_millimeter*sin(theta) #updating y 
+            theta= ((theta+np.pi)%(2*np.pi))-np.pi
+            
 
         #second case in case of a curve
         else:
@@ -123,6 +137,7 @@ class Odometry_calculation:
 
             #change in oreintation and radius of curvature of the turn
             delta_theta = ticks_to_millimeter*(tick_difference[1]-tick_difference[0])/(width_robo)# change in orientation
+            
             R = ticks_to_millimeter*tick_difference[0]/delta_theta #radius of curvature
 
             #calulating the center of curvature 
@@ -131,8 +146,10 @@ class Odometry_calculation:
         
             #updating the x and using newly calualted theta value 
             theta=theta+delta_theta
+            theta= ((theta+np.pi)%(2*np.pi))-np.pi
             x = centerx + ((R+width_robo/2)*sin(theta)) + (odometry_offset*sin(theta)) # caluating the new x
             y = centery - ((R+width_robo/2)*cos(theta)) + (odometry_offset*cos(theta)) # cacualting the new y
+            
 
         #Update x,y position
         self.pose[0] = x
@@ -150,9 +167,13 @@ class Odometry_calculation:
         self.right_tick = right_tick#updating the right tick
 
         return
+    
+    #Updation
+    def measurement_update(self,meas):
 
-def update_plot(odom_cal,realpose):
-    #plt.clf()  # Clear the current figure
+        self.pose, self.covariance = self.update_eq.update(self.pose, self.covariance, meas,self.R,self.I)
+
+def prediction(odom_cal,realpose):
     # Update the odometry and covariance
     odom_cal.get_covariance()
     odom_cal.odometry_update()
@@ -172,3 +193,14 @@ def encoder_output(v,w,delt):
     dl=vl*delt
 
     return dl,dr
+
+def update(odom_cal,realpose):
+    # Update the odometry and covariance
+    meas = np.array([(realpose[0]**2) + (realpose[1]**2),realpose[2]])
+    odom_cal.measurement_update(meas)
+    # Update the plot with the new pose and covariance
+    visualization.plot_updation(odom_cal.pose, odom_cal.covariance,realpose)
+    
+    # Redraw the plot
+    plt.draw()
+    plt.pause(0.01)  # Pause to allow for plot update
