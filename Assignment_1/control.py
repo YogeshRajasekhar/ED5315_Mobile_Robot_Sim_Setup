@@ -30,24 +30,27 @@ def gtg(robot_state, goal_state):
     
     #determine how far to rotate to face the goal point
     e_new = goal_state[-1]-robot_state[-1]
+    e_new_degree = np.degree(e_new)
     
     #Remember to restrict error to (-180 ,180)
+    e_new_degree_res = (e_new_degree+180) % 360 - 180
     
     current_time = time.time()
     dt = current_time-previous_time
     previous_time = current_time
     
     #PD controller for angular velocity
-    e_dot = ??
-    W = ??
-    prev_heading_error = ??
+    e_dot = (e_new_degree_res - prev_heading_error)/dt
+    W = Kp*e_new_degree_res + Kd*e_dot
+    prev_heading_error = e_new_degree_res
 
     #find distance to goal
-    d = distance to goal point??
+    d = np.sqrt((goal_state[0]-robot_state[0])**2 + (goal_state[1]-robot_state[1])**2)
     
     #P control for linear velocity
-    V = ??
+    V = K*d
     
     #request robot to execute velocity
     return[V,W]
+
 
