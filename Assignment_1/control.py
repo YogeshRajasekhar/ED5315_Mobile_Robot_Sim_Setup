@@ -9,7 +9,7 @@ previous_time = time.time()
 def at_goal(robot_state, goal_state):    
     
     #check if we have reached goal point
-    d = distance to goal point??
+    d = np.sqrt((goal_state[0]-robot_state[0])**2 + (goal_state[1]-robot_state[1])**2)
     
     if d <= robot_params.goal_threshold:
         return True
@@ -29,7 +29,7 @@ def gtg(robot_state, goal_state):
     K = 0.4
     
     #determine how far to rotate to face the goal point
-    e_new = error between desired and current orientation of robot (in degress) ??
+    e_new = goal_state[-1]-robot_state[-1]
     
     #Remember to restrict error to (-180 ,180)
     
@@ -50,3 +50,4 @@ def gtg(robot_state, goal_state):
     
     #request robot to execute velocity
     return[V,W]
+
